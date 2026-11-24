@@ -1,0 +1,12 @@
+docs
+.DS_Store
+
+backend/.env
+backend/uploads/
+backend/tmp/
+
+frontend/node_modules
+frontend/dist
+frontend/.env.local
+
+.env.docker
