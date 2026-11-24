@@ -1,0 +1,7 @@
+CREATE TABLE categories (
+  id         BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name       VARCHAR(60) NOT NULL UNIQUE,
+  slug       VARCHAR(70) NOT NULL UNIQUE,
+  created_at DATETIME(3) NOT NULL,
+  updated_at DATETIME(3) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -1,0 +1,1 @@
+DROP Table seeker_profiles;
