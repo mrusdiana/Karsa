@@ -1,0 +1,22 @@
+CREATE TABLE applications (
+  id                 BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  job_id             BIGINT UNSIGNED NOT NULL,
+  user_id            BIGINT UNSIGNED NOT NULL,
+  cv_path            VARCHAR(255) NOT NULL,
+  cover_letter       TEXT NULL,
+  status             ENUM('applied','reviewed','interview','accepted','rejected','withdrawn') NOT NULL DEFAULT 'applied',
+  source             ENUM('applied','invited') NOT NULL DEFAULT 'applied',
+  match_score        TINYINT UNSIGNED NOT NULL,
+  score_breakdown    JSON NOT NULL,
+  meets_requirements BOOLEAN NOT NULL,
+  company_note       TEXT NULL,
+  created_at         DATETIME(3) NOT NULL,
+  updated_at         DATETIME(3) NOT NULL,
+  UNIQUE INDEX uq_applications_job_user (job_id, user_id),
+  INDEX idx_applications_score (job_id, match_score),
+  INDEX idx_applications_user (user_id, created_at),
+  INDEX idx_applications_status (status),
+  INDEX idx_applications_created (created_at),
+  CONSTRAINT fk_applications_job  FOREIGN KEY (job_id)  REFERENCES jobs(id),
+  CONSTRAINT fk_applications_user FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

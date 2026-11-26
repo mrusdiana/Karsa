@@ -355,7 +355,7 @@ Aturan umum:
 | **jobs** | id, company_id, category_id, title, slug (unik), type, level, work_mode, location, salary_min, salary_max, show_salary, skills (JSON), description, requirements, deadline, status (`draft` / `open` / `closed`), moderation_note, views, timestamps |
 | **screening_questions** | id, job_id, question, type (`yes_no` / `number` / `text`), required, expected_answer, position |
 | **applications** | id, job_id, user_id, cv_path (snapshot), cover_letter, status, source (`applied` / `invited`), match_score, score_breakdown (JSON), meets_requirements, company_note, timestamps; unik (job_id, user_id) |
-| **application_answers** | id, application_id, question_id, answer, passed |
+| **application_answers** | id, application_id, question, required, answer, passed (teks pertanyaan disalin, supaya tetap utuh walau pertanyaan lowongan diubah) |
 | **application_events** | id, application_id, from_status (nullable), to_status, changed_by, created_at |
 | **saved_jobs** | user_id, job_id, created_at; PK (user_id, job_id) |
 | **invitations** | id, company_id, job_id, user_id, message, status (`pending` / `accepted` / `declined` / `expired`), timestamps; unik (job_id, user_id) |
