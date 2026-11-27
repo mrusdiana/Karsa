@@ -1,0 +1,58 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-karsa-root}
+      MYSQL_DATABASE: karsa
+      TZ: Asia/Jakarta
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-karsa-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    environment:
+      DB_DSN: root:${MYSQL_ROOT_PASSWORD:-karsa-root}@tcp(mysql:3306)/karsa?charset=utf8mb4&parseTime=True&loc=Local
+      JWT_SECRET: ${JWT_SECRET:?isi JWT_SECRET di file .env}
+      FRONTEND_URL: http://localhost:5173
+      API_URL: http://localhost:8080
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      RUN_SEED: "true"
+      IMAGEKIT_PRIVATE_KEY: ${IMAGEKIT_PRIVATE_KEY:-}
+    volumes:
+      - uploads:/app/uploads
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8080/api
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  dbdata:
+  uploads:
