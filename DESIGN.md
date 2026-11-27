@@ -70,8 +70,8 @@ Cadangan: `system-ui, sans-serif`.
 | `h1` | 28px Manrope 700 (mobile 24px) | Judul halaman, judul lowongan di detail |
 | `h2` | 20px Manrope 700 | Judul bagian dan kartu dashboard |
 | `h3` | 16px Inter 600 | Judul kartu lowongan |
-| `body` | 15px Inter 400, line-height 1.6 | Teks umum, deskripsi lowongan |
-| `small` | 13px Inter 500 | Metadata, chip, label |
+| `body` | 17px Inter 400, line-height 1.6 (diperbesar 27 Nov 2026) | Teks umum, deskripsi lowongan |
+| `small` | 14–15px Inter 500 | Metadata, chip, label |
 | `stat` | 30px Manrope 800 | Angka di StatCard |
 
 - Deskripsi dan persyaratan lowongan dibatasi lebar maksimal 68ch, supaya nyaman dibaca.
@@ -124,6 +124,7 @@ Wajib diuji pada lebar 375, 768, 1024, dan 1440px, tanpa scroll horizontal.
 | **InvitationCard** (pencari kerja) | pending, accepted, declined, expired | Isi: logo + perusahaan, judul lowongan, pesan, tanggal, dan sisa hari sebelum kedaluwarsa. Tombol "Terima & lamar" (primary) dan "Tolak" (ghost). |
 | **VerificationBanner** | pending, rejected | Kotak di atas dashboard perusahaan. Pending: `--warning`, "Profil perusahaan sedang ditinjau admin. Kamu bisa menyiapkan draft lowongan." Rejected: `--danger` + alasan + tombol "Perbaiki & ajukan ulang". |
 | **DiscoverableToggle** | off, on, disabled | Switch + penjelasan: "Perusahaan terverifikasi bisa melihat nama, headline, skill, lokasi, dan pendidikanmu. Email, nomor HP, dan CV tetap tersembunyi." Toggle nonaktif selama profil belum lengkap, beserta alasannya. |
+| **UserAvatar** | foto, inisial | Foto profil bulat (JPG/PNG/WebP ≤ 2 MB, `POST /me/avatar`). Disimpan di ImageKit kalau `IMAGEKIT_PRIVATE_KEY` diisi, kalau tidak di folder upload lokal. Kalau kosong, tampil inisial di atas `--primary-soft`. Dipakai di header, Profil, daftar dan detail pelamar, serta Cari Talenta. |
 | **ProfileCompleteness** | — | Bar progres + daftar item yang belum diisi (dengan link). Tampil di halaman profil dan di dialog lamaran. |
 | **CvUpload** | empty, uploading, uploaded, error | Area drop + tombol. Setelah upload: ikon PDF, nama file, ukuran, tanggal, tombol "Lihat" dan "Ganti". Galat: "Hanya PDF, maksimal 2 MB." |
 | **StatCard** | loading, filled | Label (`--muted`), angka (`stat`), dan keterangan kecil (misalnya "+12 minggu ini"). |
@@ -144,15 +145,15 @@ Wajib diuji pada lebar 375, 768, 1024, dan 1440px, tanpa scroll horizontal.
 - **Header** (putih, border bawah, sticky):
   - Kiri: logo Karsa.
   - Tengah, khusus desktop: "Cari Lowongan" dan "Perusahaan".
-  - Kanan untuk tamu: "Masuk" (ghost), "Daftar" (primary), dan link kecil "Untuk Perusahaan".
+  - Kanan untuk tamu: "Masuk" (ghost) dan "Daftar" (primary). Link "Untuk Perusahaan" hanya tampil untuk tamu, tidak untuk pengguna yang sudah masuk.
   - Kanan untuk pencari kerja: ikon "Tersimpan", ikon "Undangan" dengan badge jumlah undangan pending, dan menu avatar (Profil & CV, Lamaran Saya, Undangan, Keluar).
-- **Mobile:** ikon hamburger membuka drawer berisi link yang sama.
+- **Mobile (diubah 27 Nov 2026):** tanpa hamburger. Navigasi pindah ke **bottom nav** tetap di bawah layar. Tamu: Beranda, Lowongan, Perusahaan, Masuk. Pencari kerja: Beranda, Lowongan, Lamaran, Undangan (badge), Profil. Tombol Keluar ada di header dan di halaman Profil.
 - **Footer:** logo, tagline "Langkah pertama kariermu di dunia tech.", link (Cari Lowongan, Untuk Perusahaan, Tentang), dan keterangan proyek demo dari PRD.
 
 ### 4.2 Dashboard perusahaan dan admin
 
 - **Desktop:** sidebar kiri 240px (`--surface-2`) berisi logo dan menu, lalu konten dengan header halaman (judul + tombol utama).
-- **Mobile:** sidebar menjadi drawer.
+- **Mobile (diubah 27 Nov 2026):** sidebar diganti bottom nav berisi menu yang sama dengan label pendek; tombol Keluar di header atas.
 - **Menu perusahaan:** Dashboard, Lowongan, Cari Talenta, Undangan Terkirim, Profil Perusahaan, Keluar.
 - **Menu admin:** Dashboard, Verifikasi Perusahaan (badge jumlah pending), Pengguna, Lowongan, Kategori, Keluar.
 - Setiap tombol keluar membuka ConfirmDialog.
@@ -451,6 +452,6 @@ Endpoint bertanda **(V)** mewajibkan perusahaan `verified`. Kalau belum, server 
   - Ikon: kotak membulat (radius 10px) `--primary` berisi huruf **K** putih geometris, dengan kaki kanan bawah yang memanjang menjadi panah naik ke kanan, melambangkan langkah karier.
   - Wordmark: "Karsa", Manrope 800, warna `--text`.
   - Ikon yang sama dipakai sebagai favicon SVG.
-- **D-2, Hero beranda:** latar polos `--bg` dengan judul besar dan SearchBar. Tanpa carousel dan tanpa foto stok.
+- **D-2, Hero beranda:** latar `--bg` dengan pola garis grid tipis (kotak 40px, garis `--primary` 9%) yang memudar ke tepi, judul besar, dan SearchBar. Pola grid hanya di hero beranda. Tanpa carousel dan tanpa foto stok. (Diubah 26 Nov 2026 atas permintaan pemilik project.)
 - **D-3, Grafik:** SVG buatan sendiri (ColumnChart dari HeliozStore + BarList), tanpa library grafik.
 - **D-4, Skor:** cincin + angka + label, dan rinciannya selalu bisa dibuka (Prinsip 6).
