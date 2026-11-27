@@ -9,6 +9,7 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	_ "time/tzdata"
 
 	"karsa/internal/config"
 	"karsa/internal/database"

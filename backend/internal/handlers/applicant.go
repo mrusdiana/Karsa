@@ -31,14 +31,16 @@ type applicantInput struct {
 }
 
 type candidateSummary struct {
-	Name     string  `json:"name"`
-	Headline *string `json:"headline"`
-	Location *string `json:"location"`
+	Name      string  `json:"name"`
+	AvatarURL *string `json:"avatar_url"`
+	Headline  *string `json:"headline"`
+	Location  *string `json:"location"`
 }
 
 type candidateDetail struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name      string  `json:"name"`
+	Email     string  `json:"email"`
+	AvatarURL *string `json:"avatar_url"`
 	contactProfile
 }
 
@@ -140,6 +142,7 @@ func (handler *Handler) ShowApplicant(ctx *gin.Context) {
 		Candidate: candidateDetail{
 			Name:           application.User.Name,
 			Email:          application.User.Email,
+			AvatarURL:      application.User.AvatarURL,
 			contactProfile: newContactProfile(*application.User.Profile),
 		},
 		MatchScore:        application.MatchScore,
@@ -181,6 +184,9 @@ func (handler *Handler) UpdateApplicant(ctx *gin.Context) {
 			return nil
 		}
 		if err := moveStatus(tx, application, *input.Status, user.ID); err != nil {
+			return err
+		}
+		if err := tx.Model(&models.Application{}).Where("id = ?", application.ID).Update("has_update", true).Error; err != nil {
 			return err
 		}
 		return handler.Mailer.StatusChanged(tx, application.User.Email, application.User.Name, application.Job.Title, user.Company.Name, *input.Status, application.ID)
@@ -242,7 +248,7 @@ func respondMoveError(ctx *gin.Context, err error) {
 }
 
 func newCandidateSummary(user models.User) candidateSummary {
-	summary := candidateSummary{Name: user.Name}
+	summary := candidateSummary{Name: user.Name, AvatarURL: user.AvatarURL}
 	if user.Profile != nil {
 		summary.Headline = user.Profile.Headline
 		summary.Location = user.Profile.Location

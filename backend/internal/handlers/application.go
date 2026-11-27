@@ -37,6 +37,7 @@ type applicationSummary struct {
 	Job       jobSummary `json:"job"`
 	Status    string     `json:"status"`
 	Source    string     `json:"source"`
+	HasUpdate bool       `json:"has_update"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 }
@@ -253,9 +254,35 @@ func (handler *Handler) ListMyApplications(ctx *gin.Context) {
 }
 
 func (handler *Handler) ShowMyApplication(ctx *gin.Context) {
-	if application, ok := handler.findMyApplication(ctx); ok {
-		ctx.JSON(200, handler.applicationDetail(application))
+	application, ok := handler.findMyApplication(ctx)
+	if !ok {
+		return
 	}
+	if application.HasUpdate {
+		if err := handler.DB.Model(&models.Application{}).Where("id = ?", application.ID).Update("has_update", false).Error; err != nil {
+			httpx.ServerError(ctx, err)
+			return
+		}
+		application.HasUpdate = false
+	}
+	ctx.JSON(200, handler.applicationDetail(application))
+}
+
+func (handler *Handler) MyNotifications(ctx *gin.Context) {
+	userID := middleware.CurrentUser(ctx).ID
+	var applications, invitations int64
+	if err := handler.DB.Model(&models.Application{}).Where("user_id = ? AND has_update = ?", userID, true).Count(&applications).Error; err != nil {
+		httpx.ServerError(ctx, err)
+		return
+	}
+	err := handler.DB.Model(&models.Invitation{}).
+		Where("user_id = ? AND status = ? AND created_at >= ?", userID, "pending", time.Now().Add(-models.InvitationLifetime)).
+		Count(&invitations).Error
+	if err != nil {
+		httpx.ServerError(ctx, err)
+		return
+	}
+	ctx.JSON(200, gin.H{"applications": applications, "invitations": invitations})
 }
 
 func (handler *Handler) DownloadMyApplicationCV(ctx *gin.Context) {
@@ -304,6 +331,7 @@ func (handler *Handler) applicationSummary(application models.Application) appli
 		Job:       handler.publicSummary(*application.Job),
 		Status:    application.Status,
 		Source:    application.Source,
+		HasUpdate: application.HasUpdate,
 		CreatedAt: application.CreatedAt,
 		UpdatedAt: application.UpdatedAt,
 	}

@@ -391,7 +391,10 @@ func TestApplyAndPipeline(t *testing.T) {
 	}
 	api.call("PATCH", path, company, object{"status": "rejected"}, 422)
 	api.call("POST", mine+"/withdraw", seeker, nil, 422)
+	api.equal(api.call("GET", "/me/notifications", seeker, nil, 200)["applications"], 1)
+	api.equal(api.call("GET", "/me/applications", seeker, nil, 200)["data"].([]any)[0].(object)["has_update"], true)
 	detail := api.call("GET", mine, seeker, nil, 200)
+	api.equal(api.call("GET", "/me/notifications", seeker, nil, 200)["applications"], 0)
 	api.equal(len(detail["events"].([]any)), 4)
 	if _, leaked := detail["company_note"]; leaked {
 		t.Fatal("company_note bocor ke pelamar")
@@ -481,8 +484,11 @@ func TestTalentsAndInvitations(t *testing.T) {
 	applyPath := fmt.Sprintf("/jobs/%d/apply", idOf(job))
 	api.call("POST", applyPath, stranger, object{"invitation_id": idOf(invitation)}, 422)
 	api.call("POST", fmt.Sprintf("/me/invitations/%d/decline", idOf(invitation)), stranger, nil, 404)
+	api.equal(api.call("GET", "/me/notifications", seeker, nil, 200)["invitations"], 2)
 	application := api.call("POST", applyPath, seeker, object{"invitation_id": idOf(invitation)}, 201)["application"].(object)
 	api.equal(application["source"], "invited")
+	api.equal(application["status"], "applied")
+	api.equal(api.call("GET", "/me/notifications", seeker, nil, 200)["invitations"], 1)
 	api.call("POST", fmt.Sprintf("/me/invitations/%d/decline", idOf(declined)), seeker, nil, 200)
 	api.call("POST", fmt.Sprintf("/me/invitations/%d/decline", idOf(declined)), seeker, nil, 422)
 	api.equal(api.call("GET", "/company/invitations?status=accepted", company, nil, 200)["total"], 1)
@@ -609,4 +615,19 @@ func TestEmailWorker(t *testing.T) {
 		api.db.Model(&failing).Update("available_at", time.Now().Add(-time.Second))
 	}
 	api.equal(failing.Status, "failed")
+}
+
+func TestAvatarUpload(t *testing.T) {
+	api := newAPI(t)
+	token, _ := api.register("foto", "seeker")
+	api.upload("/me/avatar", token, "avatar", []byte("<svg onload=alert(1)>"), 422)
+	api.upload("/me/avatar", token, "avatar", append([]byte("\x89PNG\r\n\x1a\n"), make([]byte, 3<<20)...), 422)
+	first := api.upload("/me/avatar", token, "avatar", []byte("\x89PNG\r\n\x1a\nsatu"), 200)["user"].(object)["avatar_url"].(string)
+	if !strings.HasPrefix(first, "http://api/uploads/avatars/") {
+		t.Fatalf("avatar_url = %s", first)
+	}
+	api.send(httptest.NewRequest("GET", strings.TrimPrefix(first, "http://api"), nil), "", 200)
+	second := api.upload("/me/avatar", token, "avatar", []byte("\x89PNG\r\n\x1a\ndua"), 200)["user"].(object)["avatar_url"].(string)
+	api.send(httptest.NewRequest("GET", strings.TrimPrefix(first, "http://api"), nil), "", 404)
+	api.equal(api.call("GET", "/auth/me", token, nil, 200)["user"].(object)["avatar_url"], second)
 }

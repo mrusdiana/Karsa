@@ -1,0 +1,1 @@
+ALTER TABLE applications ADD COLUMN has_update BOOLEAN NOT NULL DEFAULT FALSE AFTER company_note;

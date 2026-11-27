@@ -19,8 +19,9 @@ const dailyInvitationLimit = 20
 var errInvitationLimit = errors.New("kuota undangan habis")
 
 type talentView struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
+	ID        uint    `json:"id"`
+	Name      string  `json:"name"`
+	AvatarURL *string `json:"avatar_url"`
 	publicProfile
 	InvitedJobIDs []uint `json:"invited_job_ids"`
 }
@@ -88,7 +89,7 @@ func (handler *Handler) ListTalents(ctx *gin.Context) {
 	}
 	talents := make([]talentView, len(page.Data))
 	for index, user := range page.Data {
-		talents[index] = talentView{ID: user.ID, Name: user.Name, publicProfile: newPublicProfile(*user.Profile), InvitedJobIDs: []uint{}}
+		talents[index] = talentView{ID: user.ID, Name: user.Name, AvatarURL: user.AvatarURL, publicProfile: newPublicProfile(*user.Profile), InvitedJobIDs: []uint{}}
 		for _, invitation := range invitations {
 			if invitation.UserID == user.ID {
 				talents[index].InvitedJobIDs = append(talents[index].InvitedJobIDs, invitation.JobID)
@@ -190,7 +191,7 @@ func newSentInvitation(invitation models.Invitation) sentInvitation {
 	candidate := newCandidateSummary(*invitation.User)
 	return sentInvitation{
 		ID:        invitation.ID,
-		Candidate: gin.H{"name": candidate.Name, "headline": candidate.Headline},
+		Candidate: gin.H{"name": candidate.Name, "headline": candidate.Headline, "avatar_url": candidate.AvatarURL},
 		Job:       gin.H{"id": invitation.Job.ID, "title": invitation.Job.Title},
 		Status:    invitation.Status,
 		CreatedAt: invitation.CreatedAt,

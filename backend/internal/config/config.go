@@ -17,6 +17,7 @@ type Config struct {
 	SMTPPort    string
 	MailFrom    string
 	RunSeed     bool
+	ImageKitKey string
 }
 
 func Load() Config {
@@ -33,6 +34,7 @@ func Load() Config {
 		SMTPPort:    get("SMTP_PORT", "1025"),
 		MailFrom:    get("MAIL_FROM", "no-reply@karsa.test"),
 		RunSeed:     get("RUN_SEED", "false") == "true",
+		ImageKitKey: get("IMAGEKIT_PRIVATE_KEY", ""),
 	}
 }
 

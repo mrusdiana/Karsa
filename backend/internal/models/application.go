@@ -37,6 +37,7 @@ type Application struct {
 	ScoreBreakdown    ScoreBreakdown `gorm:"serializer:json"`
 	MeetsRequirements bool
 	CompanyNote       *string
+	HasUpdate         bool
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
 

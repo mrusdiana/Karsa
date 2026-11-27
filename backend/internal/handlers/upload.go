@@ -30,6 +30,11 @@ var (
 		extensions: map[string]string{"application/pdf": ".pdf"},
 		tooLarge:   "Ukuran CV maksimal 2 MB.", wrongType: "CV harus berupa file PDF.",
 	}
+	avatarRule = uploadRule{
+		field: "avatar", folder: "avatars", maxBytes: 2 << 20,
+		extensions: map[string]string{"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"},
+		tooLarge:   "Ukuran foto maksimal 2 MB.", wrongType: "Foto harus JPG, PNG, atau WebP.",
+	}
 	logoRule = uploadRule{
 		field: "logo", folder: "logos", maxBytes: 1 << 20,
 		extensions: map[string]string{"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"},
@@ -38,9 +43,22 @@ var (
 )
 
 func (handler *Handler) saveUpload(ctx *gin.Context, rule uploadRule) (string, bool) {
-	reject := func(message string) (string, bool) {
-		httpx.FieldErrors(ctx, map[string]string{rule.field: message})
+	content, extension, ok := readUpload(ctx, rule)
+	if !ok {
 		return "", false
+	}
+	path := newFilePath(rule.folder, extension)
+	if err := handler.writeFile(path, bytes.NewReader(content)); err != nil {
+		httpx.ServerError(ctx, err)
+		return "", false
+	}
+	return path, true
+}
+
+func readUpload(ctx *gin.Context, rule uploadRule) ([]byte, string, bool) {
+	reject := func(message string) ([]byte, string, bool) {
+		httpx.FieldErrors(ctx, map[string]string{rule.field: message})
+		return nil, "", false
 	}
 
 	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, rule.maxBytes+(1<<20))
@@ -58,28 +76,22 @@ func (handler *Handler) saveUpload(ctx *gin.Context, rule uploadRule) (string, b
 	file, err := header.Open()
 	if err != nil {
 		httpx.ServerError(ctx, err)
-		return "", false
+		return nil, "", false
 	}
 	defer file.Close()
-
-	start := make([]byte, 512)
-	length, err := io.ReadFull(file, start)
-	if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) && !errors.Is(err, io.EOF) {
+	content, err := io.ReadAll(io.LimitReader(file, rule.maxBytes+1))
+	if err != nil {
 		httpx.ServerError(ctx, err)
-		return "", false
+		return nil, "", false
 	}
-	extension, isAllowed := rule.extensions[http.DetectContentType(start[:length])]
+	if int64(len(content)) > rule.maxBytes {
+		return reject(rule.tooLarge)
+	}
+	extension, isAllowed := rule.extensions[http.DetectContentType(content)]
 	if !isAllowed {
 		return reject(rule.wrongType)
 	}
-
-	path := newFilePath(rule.folder, extension)
-	content := io.MultiReader(bytes.NewReader(start[:length]), file)
-	if err := handler.writeFile(path, content); err != nil {
-		httpx.ServerError(ctx, err)
-		return "", false
-	}
-	return path, true
+	return content, extension, true
 }
 
 func (handler *Handler) copyFile(source, folder string) (string, error) {

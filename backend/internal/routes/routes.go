@@ -26,6 +26,7 @@ func New(db *gorm.DB, cfg config.Config) (*gin.Engine, error) {
 		AllowHeaders: []string{"Authorization", "Content-Type"},
 	}))
 	router.Static("/uploads/logos", cfg.UploadDir+"/logos")
+	router.Static("/uploads/avatars", cfg.UploadDir+"/avatars")
 
 	handler := &handlers.Handler{DB: db, Config: cfg, Mailer: mailer.Mailer{Config: cfg}}
 
@@ -43,6 +44,7 @@ func New(db *gorm.DB, cfg config.Config) (*gin.Engine, error) {
 
 	authed := api.Group("", middleware.Auth(db, cfg.JWTSecret))
 	authed.GET("/auth/me", handler.Me)
+	authed.POST("/me/avatar", handler.UploadAvatar)
 
 	seeker := authed.Group("", middleware.RequireRole("seeker"))
 	seeker.POST("/jobs/:id/apply", handler.Apply)
@@ -50,6 +52,7 @@ func New(db *gorm.DB, cfg config.Config) (*gin.Engine, error) {
 	seeker.PUT("/me/profile", handler.UpdateProfile)
 	seeker.GET("/me/cv", handler.DownloadCV)
 	seeker.POST("/me/cv", handler.UploadCV)
+	seeker.GET("/me/notifications", handler.MyNotifications)
 	seeker.GET("/me/applications", handler.ListMyApplications)
 	seeker.GET("/me/applications/:id", handler.ShowMyApplication)
 	seeker.GET("/me/applications/:id/cv", handler.DownloadMyApplicationCV)

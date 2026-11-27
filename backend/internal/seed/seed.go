@@ -144,7 +144,7 @@ func (seeder seeder) createJobs(createdCompanies []models.Company, categoryIDs m
 			Deadline:     time.Date(seeder.now.Year(), seeder.now.Month(), seeder.now.Day()+data.deadlineDays, 0, 0, 0, 0, time.Local),
 			Status:       data.status,
 			Views:        uint(15 + index*7%90),
-			CreatedAt:    seeder.now.AddDate(0, 0, -60+index*2),
+			CreatedAt:    seeder.now.AddDate(0, 0, -(len(jobs)-index)*3/2),
 		}
 		if data.location != "" {
 			job.Location = &data.location
